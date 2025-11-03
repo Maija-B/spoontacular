@@ -1,5 +1,3 @@
-const fetch = require("node-fetch"); // CommonJS version of import
-
 exports.handler = async (event, context) => {
   // turns the event(information) passed by the API into a js object
   const params = event.queryStringParameters || {};

@@ -1,10 +1,14 @@
-import fetch from "node-fetch";
+const fetch = require("node-fetch"); // CommonJS version of import
 
-export async function handler(event, context) {
+exports.handler = async (event, context) => {
   // turns the event(information) passed by the API into a js object
   const params = event.queryStringParameters || {};
-  //   || {} tells us to just use {} if event.queyStringParameters is going to throw an arror
+  // || {} tells us to just use {} if event.queryStringParameters is undefined
   const query = params.query || "";
+
+  const diet = params.diet || "";
+  const intolerances = params.intolerances || "";
+  const number = params.number || 6; // default results amount
 
   const API_KEY = process.env.SPOONTACULAR_API_KEY;
   if (!API_KEY) {
@@ -13,40 +17,29 @@ export async function handler(event, context) {
       body: JSON.stringify({ error: "Missing API key on server" }),
     };
   }
-}
 
-const baseUrl = "https://api.spoonacular.com/recipes/complexSearch";
-const url = new URL(baseUrl);
-if (query) url.searchParams.append("query", query);
-if (diet) url.searchParams.append("diet", diet);
-if (intolerances) url.searchParams.append("intolerances", intolerances);
-url.searchParams.append("number", number);
-url.searchParams.append("addRecipeInformation", "true"); // include more details
-url.searchParams.append("apiKey", API_KEY); // auth via query param
+  try {
+    // Build URL for Spoonacular API
+    const url = new URL("https://api.spoonacular.com/recipes/complexSearch");
+    url.searchParams.append("apiKey", API_KEY);
+    url.searchParams.append("query", query);
+    if (diet) url.searchParams.append("diet", diet);
+    if (intolerances) url.searchParams.append("intolerances", intolerances);
+    url.searchParams.append("number", number);
 
-try {
-  // 4) Call Spoonacular from the server (key is used here, hidden from client)
-  const resp = await fetch(url.toString());
-  if (!resp.ok) {
-    const text = await resp.text();
+    // Fetch API
+    const response = await fetch(url.toString());
+    const data = await response.json();
+
     return {
-      statusCode: resp.status,
-      body: JSON.stringify({ error: text }),
+      statusCode: 200,
+      body: JSON.stringify(data),
+    };
+  } catch (error) {
+    console.error("Server error:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: "Server failed" }),
     };
   }
-  const data = await resp.json();
-
-  // 5) Return the Spoonacular JSON straight to the frontend
-  return {
-    statusCode: 200,
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  };
-} catch (err) {
-  return {
-    statusCode: 500,
-    body: JSON.stringify({ error: err.message }),
-  };
-}
+};

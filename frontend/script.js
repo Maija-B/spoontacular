@@ -35,19 +35,35 @@ form.addEventListener("submit", async (e) => {
       resultsEl.innerHTML = "<p>No recipes found.</p>";
       return;
     }
-    resultsEl.innerHTML = ""; // clear
 
+    resultsEl.innerHTML = ""; // clear
     data.results.forEach((recipe) => {
       // Each recipe (we requested addRecipeInformation=true so we should have image and sourceUrl)
+      const div = document.createElement("div");
+      div.className = "recipe";
+
+      const img = document.createElement("img");
+      img.src = recipe.image || "";
+      img.alt = recipe.title || "Recipe image";
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
       const title = document.createElement("h3");
       title.textContent = recipe.title || "Untitled";
       const info = document.createElement("p");
-      info.innerHTML = `Ready in ${recipe.readyInMinutes || "?"} mins • Servings: ${recipe.servings || "?"}
+      info.innerHTML = `
+        Ready in ${recipe.readyInMinutes || "?"} mins • Servings: ${recipe.servings || "?"}
         <br/>
-        <a href="${recipe.sourceUrl || "#"}" target="_blank" rel="noopener">View full recipe</a>`;
+        <a href="${recipe.sourceUrl || "#"}" target="_blank" rel="noopener">View full recipe</a>
+      `;
+
+      meta.appendChild(title);
+      meta.appendChild(info);
+
+      div.appendChild(img);
+      div.appendChild(meta);
+      resultsEl.appendChild(div);
     });
-    recipes.appendChild(title);
-    recipes.appendChild(info);
   } catch (err) {
     resultsEl.innerHTML = `<p style="color:red">Error: ${err.message}</p>`;
     console.error(err);
